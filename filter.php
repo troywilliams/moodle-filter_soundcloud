@@ -67,6 +67,7 @@ class filter_soundcloud extends moodle_text_filter {
 
 function filter_soundcloud_callback($link) {
     global $CFG;
+    $count = 0;
     
     if (filter_soundcloud_ignore($link[0])) {
         return $link[0];
