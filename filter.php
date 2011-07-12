@@ -117,11 +117,13 @@ $output = <<<OET
 <object height="81" width="100%" id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000">
   <param name="movie" value="$src"></param>
   <param name="allowscriptaccess" value="always"></param> 
+  <param name="wmode" value="opaque"></param>   
   <embed allowscriptaccess="always" 
          height="81"
          width="100%" 
          src="$src" 
          type="application/x-shockwave-flash" 
+         wmode="opaque" 
          name="soundcloudplayer">
   </embed> 
   $printlink
