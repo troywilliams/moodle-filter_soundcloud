@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Soundcloud filter
  * 
@@ -26,14 +28,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 require_once($CFG->libdir.'/filelib.php');
 
-
-/**
- *
- */
 class filter_soundcloud extends moodle_text_filter {
     function filter($text, array $options = array()) {
         global $CFG;
@@ -54,8 +50,6 @@ class filter_soundcloud extends moodle_text_filter {
         $newtext = preg_replace_callback($search, 'filter_soundcloud_callback', $newtext);
         
         if (empty($newtext) or $newtext === $text) {
-            // error or not filtered
-            mtrace('link empty');
             unset($newtext);
             return $text;
         }
@@ -65,70 +59,45 @@ class filter_soundcloud extends moodle_text_filter {
 
 }
 
+/**
+ * Change link to soundcloud player
+ *
+ * @global stdClass $CFG
+ * @param array $link
+ * @return string $output
+ */
 function filter_soundcloud_callback($link) {
     global $CFG;
-    $count = 0;
+    require_once($CFG->dirroot.'/filter/soundcloud/soundcloudapi.php');
+
+    $output = '';
     
-    if (filter_soundcloud_ignore($link[0])) {
-        return $link[0];
-    }
-    // required parts to build track url for player
-    $username   = trim($link[1]);
-    $permalink  = trim($link[2]);
-    $secretlink = trim($link[3]);
-    $info       = trim($link[4]);
-    
-    // is it a private track? 
-    $trackurl = 'http://soundcloud.com/'.$username.'/'.$permalink;
+    $config     = get_config('soundcloud');
+    $username   = $link[1];
+    $permalink  = $link[2];
+    $secretlink = isset($link[3]) ? $link[3] : false;
+    $info       = isset($link[4]) ? $link[4] : false;
+
+    // create a client object with your app credentials
+    $client = new Services_Soundcloud($config->clientid, $config->clientsecret);
+
+    $client->setCurlOptions(array(CURLOPT_FOLLOWLOCATION => 1));
+
+    $trackurl = 'http://soundcloud.com/' . $username . '/' . $permalink;
     if ($secretlink) {
-        $trackurl = 'http://soundcloud.com/'.$username.'/'.$permalink.'/'.$secretlink;
+        $trackurl = 'http://soundcloud.com/' . $username . '/' .$permalink . '/' .$secretlink;
     }
+    // get a tracks oembed data
+    $embedinfo = json_decode($client->get('oembed', array('url' => $trackurl)));
     
-    $count++;
-    $id = 'filter_soundcloud_'.time().'_'.$count; //we need something unique because it might be stored in text cache
-    
-    $playerurl = 'http://player.soundcloud.com/player.swf';
-    $parameters = array('url'=>$trackurl,
-                        'object_id'=>$id,
-                        'single_active'=>'false',
-                        'enable_api'=>'true',
-                        'download'=>'false',
-                        'sharing'=>'false',
-                        'show_comments'=>'false');
-    
-    // set play button colour if configured
-    if (!empty($CFG->filter_soundcloud_colour)) {
-       $parameters['color'] = $CFG->filter_soundcloud_colour;
+    // render the html for the player widget
+    $output .= html_writer::start_div('soundcloud-widget');
+    $output .= $embedinfo->html;
+    $output .= html_writer::end_div();
+
+    if ($info) {
+       $output .= html_writer::link($trackurl, $info, array('class' => 'mediafallbacklink'));
     }
-    // set theme colour if configured
-    if (!empty($CFG->filter_soundcloud_theme_colour)) {
-       $parameters['theme_color'] = $CFG->filter_soundcloud_theme_colour;
-    }
- 
-    // track url, options for player included in url as params
-    $src = new moodle_url($playerurl, $parameters); 
-    
-    if (empty($info) or strpos($info, 'http') === 0) {
-        $info = get_string('sitesoundcloud', 'filter_soundcloud');
-    }
-    $printlink = html_writer::link($trackurl, $info, array('class'=>'mediafallbacklink'));
-        
-$output = <<<OET
-<object height="81" width="100%" id="$id" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000">
-  <param name="movie" value="$src"></param>
-  <param name="allowscriptaccess" value="always"></param> 
-  <param name="wmode" value="opaque"></param>   
-  <embed allowscriptaccess="always" 
-         height="81"
-         width="100%" 
-         src="$src" 
-         type="application/x-shockwave-flash" 
-         wmode="opaque" 
-         name="soundcloudplayer">
-  </embed> 
-  $printlink
-</object> 
-OET;
 
     return $output;
 }

@@ -14,21 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
 
-defined('MOODLE_INTERNAL') || die;
+function xmldb_filter_soundcloud_upgrade($oldversion) {
+    global $CFG, $DB;
 
-if ($ADMIN->fulltree) {
-    
-    $settings->add(new admin_setting_configcolourpicker('filter_soundcloud_colour', 
-                                             get_string('colour', 
-                                                        'filter_soundcloud'), '', ''));
-    
-    $settings->add(new admin_setting_configcolourpicker('filter_soundcloud_theme_colour', 
-                                             get_string('themecolour', 
-                                                        'filter_soundcloud'), '', ''));
- 
+    $dbman = $DB->get_manager();
 
+    // Moodle v2.6.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2013111800) {
+        unset_all_config_for_plugin('filter_soundcloud');
+        upgrade_plugin_savepoint(true, 2013111800, 'filter', 'soundcloud');
+    }
+
+    return true;
 }
-
-?>
-

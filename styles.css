@@ -1,0 +1,6 @@
+.soundcloud-widget {
+    display: none;
+}
+body.jsenabled .soundcloud-widget {
+    display: block;
+}

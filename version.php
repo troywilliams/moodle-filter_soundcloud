@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,15 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
- * Soundcloud filter
+ * Version details
  *
  * @package    filter
- * @subpackage Soundcloud
- * @copyright  2011 Troy Williams
+ * @subpackage souncloud
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2011063000;
+$plugin->component = 'filter_soundcloud';   // Full name of the plugin (used for diagnostics)
+$plugin->version   = 2013051400;            // The current plugin version (Date: YYYYMMDDXX)
+$plugin->requires  = 2013051400;            // Requires this Moodle version
+$module->release   = '2.5';                 // Human-friendly version name
+$module->maturity  = MATURITY_BETA;         // This version's maturity level
