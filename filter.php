@@ -68,7 +68,11 @@ class filter_soundcloud extends moodle_text_filter {
  */
 function filter_soundcloud_callback($link) {
     global $CFG;
-    require_once($CFG->dirroot.'/filter/soundcloud/soundcloudapi.php');
+
+    // class may be loaded through repository, apparently require_once only looks at paths
+    if (! class_exists('Services_Soundcloud', false)) {
+        require_once($CFG->dirroot . '/filter/soundcloud/soundcloudapi.php');
+    }
 
     $output = '';
     
